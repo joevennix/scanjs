@@ -92,9 +92,14 @@
     new: {
       nodeType: "NewExpression",
       test: function (testNode, node) {
-        if (node.callee.name == testNode.callee.name) {
-          return true;
+        if (node.callee.name != testNode.callee.name) {
+          return;
         }
+        if (!templateRules.matchArgs(testNode, node)) {
+          return;
+        }
+
+        return true;
       }
     },
     call: {
@@ -126,6 +131,8 @@
     matchArgs: function (testNode, node) {
       var matching = node.arguments.length > 0;
       var index = 0;
+      var anyUnsafe = false;
+      var reportAnyUnsafe = false;
       while (matching && index < testNode.arguments.length) {
         var testArg = testNode.arguments[index];
         //ensure each literal argument matches
@@ -134,9 +141,27 @@
             matching = false;
           }
         }
+        if (testArg.name == '$$_unsafe') {
+          reportAnyUnsafe = true;
+        }
+        if (testArg.name == "$_unsafe" || testArg.name == "$$_unsafe") {
+          if (!templateRules.$_contains(node.arguments[index], "MemberExpression") &&
+            !templateRules.$_contains(node.arguments[index], "Identifier")) {
+            matching = false;
+          }
+        }
         index++;
       }
-      if (matching) {
+
+      index = 0;
+      while (reportAnyUnsafe && !anyUnsafe && index < node.arguments.length) {
+        if (templateRules.$_contains(node.arguments[index], "MemberExpression") ||
+            templateRules.$_contains(node.arguments[index], "Identifier")) {
+          anyUnsafe = true;
+        }
+        index++;
+      }
+      if (matching || (reportAnyUnsafe && anyUnsafe)) {
         return true;
       }
     },
@@ -174,7 +199,8 @@
           //support $_unsafe for RHS of assignment
           var unsafe = true;
           if (testNode.right.type == "Identifier" && testNode.right.name == "$_unsafe") {
-            unsafe = templateRules.$_contains(node.right, "Identifier")
+            unsafe = templateRules.$_contains(node.right, "Identifier") ||
+              templateRules.$_contains(node.right, "MemberExpression");
           }
           return unsafe;
         }
@@ -186,7 +212,8 @@
         //support $_unsafe for RHS of assignment
         var unsafe = true;
         if (testNode.right.type == "Identifier" && testNode.right.name == "$_unsafe") {
-          unsafe = templateRules.$_contains(node.right, "Identifier")
+          unsafe = templateRules.$_contains(node.right, "Identifier") ||
+            templateRules.$_contains(node.right, "MemberExpression");
         }
 
         if (templateRules.property.test(testNode.left, node.left) && unsafe) {
@@ -201,7 +228,8 @@
         //support $_unsafe for RHS of assignment
         var unsafe = true;
         if (testNode.right.type == "Identifier" && testNode.right.name == "$_unsafe") {
-          unsafe = templateRules.$_contains(node.right, "Identifier")
+          unsafe = templateRules.$_contains(node.right, "Identifier") ||
+            templateRules.$_contains(node.right, "MemberExpression");
         }
 
         if (templateRules.objectproperty.test(testNode.left, node.left) && unsafe) {
