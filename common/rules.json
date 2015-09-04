@@ -744,14 +744,6 @@
     "threat": "Certified API"
   },
   {
-    "name": "speaker-control permission",
-    "source": "new MozSpeakerManager()",
-    "testhit": "var mgr = new MozSpeakerManager();",
-    "testmiss": "",
-    "desc": "Usage of sensitive API",
-    "threat": ""
-  },
-  {
     "name": "systemXHR permission",
     "source": "new XMLHttpRequest({mozSystem: true});",
     "testhit": "var xhr = new XMLHttpRequest({mozSystem: true});",

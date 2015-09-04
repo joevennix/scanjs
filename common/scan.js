@@ -145,8 +145,7 @@
           reportAnyUnsafe = true;
         }
         if (testArg.name == "$_unsafe" || testArg.name == "$$_unsafe") {
-          if (!templateRules.$_contains(node.arguments[index], "MemberExpression") &&
-            !templateRules.$_contains(node.arguments[index], "Identifier")) {
+          if (!templateRules.isUnsafe(node.arguments[index])) {
             matching = false;
           }
         }
@@ -155,8 +154,7 @@
 
       index = 0;
       while (reportAnyUnsafe && !anyUnsafe && index < node.arguments.length) {
-        if (templateRules.$_contains(node.arguments[index], "MemberExpression") ||
-            templateRules.$_contains(node.arguments[index], "Identifier")) {
+        if (templateRules.isUnsafe(node.arguments[index])) {
           anyUnsafe = true;
         }
         index++;
@@ -199,8 +197,7 @@
           //support $_unsafe for RHS of assignment
           var unsafe = true;
           if (testNode.right.type == "Identifier" && testNode.right.name == "$_unsafe") {
-            unsafe = templateRules.$_contains(node.right, "Identifier") ||
-              templateRules.$_contains(node.right, "MemberExpression");
+            unsafe = templateRules.isUnsafe(node.right);
           }
           return unsafe;
         }
@@ -212,8 +209,7 @@
         //support $_unsafe for RHS of assignment
         var unsafe = true;
         if (testNode.right.type == "Identifier" && testNode.right.name == "$_unsafe") {
-          unsafe = templateRules.$_contains(node.right, "Identifier") ||
-            templateRules.$_contains(node.right, "MemberExpression");
+          unsafe = templateRules.isUnsafe(node.right);
         }
 
         if (templateRules.property.test(testNode.left, node.left) && unsafe) {
@@ -228,8 +224,7 @@
         //support $_unsafe for RHS of assignment
         var unsafe = true;
         if (testNode.right.type == "Identifier" && testNode.right.name == "$_unsafe") {
-          unsafe = templateRules.$_contains(node.right, "Identifier") ||
-            templateRules.$_contains(node.right, "MemberExpression");
+          unsafe = templateRules.isUnsafe(node.right);
         }
 
         if (templateRules.objectproperty.test(testNode.left, node.left) && unsafe) {
@@ -240,6 +235,11 @@
     $_contains: function (node, typestring) {
       var foundnode = walk.findNodeAt(node, null, null, typestring);
       return typeof foundnode != 'undefined'
+    },
+    isUnsafe: function(node) {
+      return (templateRules.$_contains(node, "MemberExpression") ||
+            templateRules.$_contains(node, "Identifier")) &&
+            !templateRules.$_contains(node, "FunctionExpression");
     },
     ifstatement: {
       nodeType: "IfStatement",
