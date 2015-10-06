@@ -237,8 +237,9 @@
       return typeof foundnode != 'undefined'
     },
     isUnsafe: function(node) {
+      var SAFE_GLOBALS = ['window', 'document', 'top', 'parent'];
       return (templateRules.$_contains(node, "MemberExpression") ||
-            templateRules.$_contains(node, "Identifier")) &&
+            (templateRules.$_contains(node, "Identifier") && SAFE_GLOBALS.indexOf(walk.findNodeAt(node, null, null, "Identifier").node.name) < 0)) &&
             !templateRules.$_contains(node, "FunctionExpression");
     },
     ifstatement: {
